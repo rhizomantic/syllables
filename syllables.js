@@ -111,12 +111,13 @@ function setup() {
     canvas.parent('container');
 
     textSize(96);
-    fill('#FFFFFF');
+    fill(255, 60);
+    noStroke();
 }
 
 function draw() {
     if(go) {
-        heat = contrast( noise(1, t*0.001), 3 );
+        heat = contrast( noise(1, t*0.001), 2 );
 
         if(t % int(heat*50+10) == 1) {
             if( compare(current, target) || int(random(heat*50+10)) == 1 ) {
@@ -139,13 +140,18 @@ function draw() {
                 }
             }
 
-            background(backCol);
-            let wrd = current.join('');
-            let wrdW = textWidth(wrd);
-            text(wrd, width/2 - wrdW/2, height/2);
-
-            console.log(wrd, heat);
+            console.log(current.join(''), heat);
         }
+
+        background(backCol);
+        let wrd = current.join('');
+        let wrdW = textWidth(wrd);
+        for(let i=0; i<5; i++) {
+            let off = [ (noise(i+2, t*0.001)-0.5) * (heat*80), (noise(i+8, t*0.001)-0.5) * (heat*80) ];
+            text(wrd, width/2 - wrdW/2 + off[0], height/2 + off[1]);
+        }
+
+
         t++;
     }
 }
