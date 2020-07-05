@@ -1,6 +1,7 @@
 var current = ["be", "gin"];
 var target = current;
 var old = current;
+var actions = [];
 var t = 0;
 var go = true;
 var backCol = 0;
@@ -41,42 +42,86 @@ function draw() {
                 if(target[target.length-1].length == 0) target.pop();
                 //fill(255, (mood+5)*24 + 10)
 
-                console.log("T--", t2);
+                console.log("T--", t2.join('.'));
             }
             if(! compare(current, target)){
                 old = [...current];
+                actions = [];
+                let cr, w1 = 0; w2 = 0;
                 if( int(random(20)) == 1 ) {
                     inx = int(random(current.length));
+
+                    for(let i=0; i<current.length; i++){
+                        actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
+                        cr = textSize(current[i]);
+                        w1 += cr;
+                        w2 += cr;
+                        if(i == inx) {
+                            actions.push({tx:current[i], p1:w1, p2:w2, act:"in"});
+                            w2 += cr;
+                        }
+                    }
                     current.splice(inx, 0, current[inx]);
                     op = "dup";
+
                 } else if(target.length > current.length) {
                     inx = int(random(target.length));
+
+                    for(let i=0; i<current.length; i++){
+                        actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
+                        cr = textSize(current[i]);
+                        w1 += cr;
+                        w2 += cr;
+                        if(i == inx) {
+                            actions.push({tx:target[i], p1:w1, p2:w2, act:"in"});
+                            w2 += textSize(target[i]);
+                        }
+                    }
                     current.splice(inx, 0, target[inx]);
                     op = "add";
+
                 } else if(target.length < current.length) {
                     outx = int(random(current.length));
+
+                    for(let i=0; i<current.length; i++){
+                        if(i == inx) {
+                            actions.push({tx:current[i], p1:w1, p2:w2, act:"out"});
+                            w1 += textSize(current[i]);
+                        } else {
+                            actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
+                            cr = textSize(current[i]);
+                            w1 += cr;
+                            w2 += cr;
+                        }
+                    }
                     current.splice(outx, 1);
                     op = "sub";
+
                 } else {
                     do{ inx = int(random(current.length)) } while (current[inx] == target[inx]);
+
+
+                    for(let i=0; i<current.length; i++){
+                        if(i == inx) {
+                            actions.push({tx:current[i], p1:w1, p2:w2, act:"out"});
+                            actions.push({tx:target[i], p1:w1, p2:w2, act:"in"});
+                            w1 += textSize(current[i]);
+                            w2 += textSize(target[i]);
+                        } else {
+                            actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
+                            cr = textSize(current[i]);
+                            w1 += cr;
+                            w2 += cr;
+                        }
+                    }
                     current.splice(inx, 1, target[inx]);
                     outx = inx;
-                    op = "rep";
+                    op = "swp";
+
                 }
             }
 
-            /*background(backCol);
-            let wrd = current.join('');
-
-
-            let off = [0, 0];//[ (noise(2, t*0.001)-0.5) * (heat*80), (noise(8, t*0.001)-0.5) * (heat*80) ];
-            let sz = 50 + (mood+5) * 20;//contrast(noise(5.5, t*0.001), 2)  * 200 + 60;
-            textSize(sz);
-            let wrdW = textWidth(wrd);
-
-            text(wrd, width/2 - wrdW/2 + off[0], height/2 + off[1]);*/
-
-            console.log(current.join(''), op, inx, outx);
+            console.log(current.join(''), op, actions);
             go = false;
             // for(let s of current) {
             //     console.log('-', s);
@@ -84,11 +129,8 @@ function draw() {
         }
 
         background(backCol);
-        // let wrd = current.join('');
-        // let wrdW = textWidth(wrd);
-        //
-        // text(wrd, 50, height/2);
-        let pos1 = pos2 = 50;
+
+        /*let pos1 = pos2 = 50;
         let x = (t % beat) / beat;
         let a, w1, w2;
         if(x < 0.5) {
@@ -110,17 +152,25 @@ function draw() {
                 pos1 += w1;
                 pos2 += w2;
             }
+        }*/
+
+        let mrg = 50;
+        let x = (t % beat) / beat;
+        for(let i=0; i<actions.length; i++){
+            let a = actions[i];
+            if(a.act == "no") {
+                text(a.tx, mrg + a.p1, height/2);
+            } else if(a.act == "mov") {
+                text(a.tx, mrg + (a.p1 + ease("simple", x, 2) * (a.p2-a.p1)), height/2);
+            } else if(a.act == "in") {
+                fill(255, ease("simple", x, -4) * 255);
+                text(a.tx, mrg + a.p1, height/2);
+            } else if(a.act == "out") {
+                fill(255, ease("simple", 1-x, -4) * 255);
+                text(a.tx, mrg + a.p1, height/2);
+            }
         }
-        //fill(255, a);
-        //console.log(inx, outx);
 
-
-        // for(let i = 0, mx = max(target.length, current.length); i < current.length; i++) {
-        //     fill(255, (i == outx && x < 0.5) || (i == inx && x > 0.5) ? a : 255);
-        //     let w = textWidth(current[i]);
-        //     text(current[i], pos, height/2);
-        //     pos += w;
-        // }
 
         t++;
     }
