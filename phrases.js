@@ -1,12 +1,13 @@
-var current = ["be", "gin"];
-var target = current;
+var curr = ["be", "gin"];
+var tgt = curr;
+var adj, noun;
+
 var column = [];
 var t = 0;
 var go = true;
 var backCol = 0;
-var heat = 0.5;
 var mood = 0;
-var beat = 30;
+var beat = 45;
 var fontSz = 60;
 var base;
 
@@ -21,6 +22,10 @@ function setup() {
     frameRate(30);
 
     base = [50, height*0.8];
+    adj = { curr:["be", "gin"], tgt:["be", "gin"], word:'' };
+    noun = { curr:["be", "gin"], tgt:["be", "gin"], word:'' };
+    //curr = getWord("adj");
+    //console.log("ini", curr, tgt);
 
     textSize(fontSz);
     fill(255, 255);
@@ -29,64 +34,20 @@ function setup() {
 
 function draw() {
     if(go) {
-        heat = contrast( noise(1, t*0.001), 2 );
-
 
         if(t % int(beat) == 0) {
-            column.push(current.join(''));
+            column.push(adj.word +' '+ noun.word);
             //console.log(column);
-
-            let op = "non";
-            ix = -1
-            if( compare(current, target) || int(random(heat*40+15)) == 1 ) {
-                let t1 = words[int(random(words.length))];
-                let t2 = t1.split('\t');
-                mood = parseInt(t2[1]);
-                target = t2[0].split('.');
-                if(target[target.length-1].length == 0) target.pop();
-
-
-                console.log("T--", target.join('.'));
-            }
-            if(! compare(current, target)){
-                old = [...current];
-
-                let cr, w1 = 0; w2 = 0;
-                if( int(random(20)) == 1 ) {
-                    ix = int(random(current.length));
-                    current.splice(ix, 0, current[ix]);
-                    op = "dup";
-
-                } else if(target.length > current.length) {
-                    ix = int(random(target.length));
-                    current.splice(ix, 0, target[ix]);
-                    op = "add";
-
-                } else if(target.length < current.length) {
-                    ix = int(random(current.length));
-                    current.splice(ix, 1);
-                    op = "sub";
-
-                } else {
-                    do{ ix = int(random(current.length)) } while (current[ix] == target[ix]);
-                    current.splice(ix, 1, target[ix]);
-                    op = "swp";
-
-                }
-            }
-
-            console.log(current.join('.'), op);
-            //go = false;
-
+            change(adj);
+            change(noun);
+            //console.log(t, curr, tgt);
         }
 
         background(backCol);
 
-
-
         let x = (t % beat) / beat;
         fill(255, ease("simple", x, -2) * 255);
-        text(current.join(''), base[0], base[1]);
+        text(adj.word +' '+ noun.word, base[0], base[1]);
 
         fill(255, 255);
         let n = 0, pos;
@@ -100,6 +61,54 @@ function draw() {
 
         t++;
     }
+}
+
+function change(word) {
+    let op = "non";
+    ix = -1
+    if( compare(word.curr, word.tgt) || int(random(20)) == 1 ) {
+        word.tgt = getWord(word);
+    }
+
+    if(! compare(word.curr, word.tgt)){
+
+        let cr, w1 = 0; w2 = 0;
+        if( int(random(20)) == 1 ) {
+            ix = int(random(word.curr.length));
+            word.curr.splice(ix, 0, word.curr[ix]);
+            op = "dup";
+
+        } else if(word.tgt.length > word.curr.length) {
+            ix = int(random(word.tgt.length));
+            word.curr.splice(ix, 0, word.tgt[ix]);
+            op = "add";
+
+        } else if(word.tgt.length < word.curr.length) {
+            ix = int(random(word.curr.length));
+            word.curr.splice(ix, 1);
+            op = "sub";
+
+        } else {
+            do{ ix = int(random(word.curr.length)) } while (word.curr[ix] == word.tgt[ix]);
+            word.curr.splice(ix, 1, word.tgt[ix]);
+            ix = ix;
+            op = "swp";
+
+        }
+    }
+
+    word.word = word.curr.join('');
+
+    console.log(word.word, op);
+}
+
+function getWord(word) {
+    let t1 = word == noun ? nouns[int(random(nouns.length))] : adjectives[int(random(adjectives.length))];
+    out = t1.split('.');
+    if(out[out.length-1].length == 0) out.pop();
+
+    console.log("T--", out.join('.'));
+    return out;
 }
 
 function compare(a, b) {
