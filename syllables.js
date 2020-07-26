@@ -1,14 +1,11 @@
 var current = ["be", "gin"];
 var target = current;
-var old = current;
-var actions = [];
+var parts = [];
 var t = 0;
 var go = true;
 var backCol = 0;
-var heat = 0.5;
-var mood = 0;
 var beat = 80;
-var inx , outx;
+
 
 
 // function preload() {
@@ -19,22 +16,36 @@ function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
     canvas.parent('container');
     frameRate(30);
-
     textSize(96);
     fill(255, 255);
     noStroke();
+
+    parts.push( new Part(' ', null, 'no') );
+    parts[0].x = 50;
+    parts[0].y = height/2;
+    parts.push( new Part('be', parts[0], 'no') );
+    parts.push( new Part('gin', parts[1], 'no') );
+
+
 }
 
 function draw() {
     if(go) {
-        heat = contrast( noise(1, t*0.001), 2 );
+        //heat = contrast( noise(1, t*0.001), 2 );
 
 
         if(t % int(beat) == 0) {
             let op = "non";
-            inx = -1
-            outx = -1;
-            if( compare(current, target) || int(random(heat*40+15)) == 1 ) {
+            ix = -1
+
+            let tmp = []
+            for(let i=0; i<parts.length; i++) {
+                if(parts[i].op == "in") parts[i].op = 'no';
+                if(parts[i].op != "out") tmp.push(parts[i]);
+            }
+            parts = [... tmp];
+
+            if( compare(current, target) || int(random(30)) == 1 ) {
                 let t1 = words[int(random(words.length))];
                 let t2 = t1.split('\t');
                 mood = parseInt(t2[1]);
@@ -44,84 +55,64 @@ function draw() {
 
                 console.log("T--", t2.join('.'));
             }
-            if(! compare(current, target)){
-                old = [...current];
-                actions = [];
-                let cr, w1 = 0; w2 = 0;
-                if( int(random(20)) == 1 ) {
-                    inx = int(random(current.length));
 
-                    for(let i=0; i<current.length; i++){
-                        actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
-                        cr = textSize(current[i]);
-                        w1 += cr;
-                        w2 += cr;
-                        if(i == inx) {
-                            actions.push({tx:current[i], p1:w1, p2:w2, act:"in"});
-                            w2 += cr;
-                        }
-                    }
-                    current.splice(inx, 0, current[inx]);
+            if(! compare(current, target)){
+                // old = [...current];
+                // actions = [];
+                // let cr, w1 = 0; w2 = 0;
+                if( int(random(10)) == 1 ) {
+                    ix = int(random(current.length));
+
+                    parts.splice(ix+1, 0, new Part(current[ix], parts[ix], 'in') );
+                    if(parts.length > ix+2) parts[ix+2].a = parts[ix+1];
+                    current.splice(ix, 0, current[ix]);
                     op = "dup";
 
                 } else if(target.length > current.length) {
-                    inx = int(random(target.length));
+                    ix = int(random(target.length));
+                    let ixx = max(ix, current.length-1);
 
-                    for(let i=0; i<current.length; i++){
-                        actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
-                        cr = textSize(current[i]);
-                        w1 += cr;
-                        w2 += cr;
-                        if(i == inx) {
-                            actions.push({tx:target[i], p1:w1, p2:w2, act:"in"});
-                            w2 += textSize(target[i]);
-                        }
-                    }
-                    current.splice(inx, 0, target[inx]);
+                    parts.splice(ixx+1, 0, new Part(target[ix], parts[ixx], 'in') );
+                    if(parts.length > ixx+2) parts[ixx+2].a = parts[ixx+1];
+                    current.splice(ixx, 0, target[ix]);
                     op = "add";
 
                 } else if(target.length < current.length) {
-                    outx = int(random(current.length));
+                    ix = int(random(current.length));
 
-                    for(let i=0; i<current.length; i++){
-                        if(i == inx) {
-                            actions.push({tx:current[i], p1:w1, p2:w2, act:"out"});
-                            w1 += textSize(current[i]);
-                        } else {
-                            actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
-                            cr = textSize(current[i]);
-                            w1 += cr;
-                            w2 += cr;
-                        }
-                    }
-                    current.splice(outx, 1);
+                    parts[ix+1].op = 'out';
+                    if(parts.length > ix+2) parts[ix+2].a = parts[ix];
+                    current.splice(ix, 1);
                     op = "sub";
 
                 } else {
-                    do{ inx = int(random(current.length)) } while (current[inx] == target[inx]);
+                    do{ ix = int(random(current.length)) } while (current[ix] == target[ix]);
 
 
-                    for(let i=0; i<current.length; i++){
-                        if(i == inx) {
-                            actions.push({tx:current[i], p1:w1, p2:w2, act:"out"});
-                            actions.push({tx:target[i], p1:w1, p2:w2, act:"in"});
-                            w1 += textSize(current[i]);
-                            w2 += textSize(target[i]);
-                        } else {
-                            actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
-                            cr = textSize(current[i]);
-                            w1 += cr;
-                            w2 += cr;
-                        }
-                    }
-                    current.splice(inx, 1, target[inx]);
-                    outx = inx;
+                    // for(let i=0; i<current.length; i++){
+                    //     if(i == inx) {
+                    //         actions.push({tx:current[i], p1:w1, p2:w2, act:"out"});
+                    //         actions.push({tx:target[i], p1:w1, p2:w2, act:"in"});
+                    //         w1 += textSize(current[i]);
+                    //         w2 += textSize(target[i]);
+                    //     } else {
+                    //         actions.push({tx:current[i], p1:w1, p2:w2, act:(w1 != w2 ? "mov" : "no")});
+                    //         cr = textSize(current[i]);
+                    //         w1 += cr;
+                    //         w2 += cr;
+                    //     }
+                    // }
+                    parts[ix+1].op = 'out';
+                    parts.splice(ix+2, 0, new Part(target[ix], parts[ix], 'in') );
+                    if(parts.length > ix+3) parts[ix+3].a = parts[ix+2];
+                    current.splice(ix, 1, target[ix]);
+                    //outx = inx;
                     op = "swp";
 
                 }
             }
 
-            console.log(current.join(''), op, actions);
+            console.log(op, current, parts);
             go = false;
             // for(let s of current) {
             //     console.log('-', s);
@@ -130,31 +121,9 @@ function draw() {
 
         background(backCol);
 
-        /*let pos1 = pos2 = 50;
-        let x = (t % beat) / beat;
-        let a, w1, w2;
-        if(x < 0.5) {
-            a = ease("simple", 1-x*2, -4) * 255;
-            for(let i = 0; i < old.length; i++) {
-                fill(255, i == outx ? a : 255);
-                w1 = textWidth(old[i]);
-                text(old[i], pos1, height/2);
-                pos1 += w1;
-            }
-        } else {
-            a = ease("simple", (x-0.5)*2, -4) * 255;
-            for(let i = 0; i < current.length; i++) {
-                fill(255, i == inx ? a : 255);
-                w1 = i < old.length ? textWidth(old[i]) : 0;
-                w2 = textWidth(current[i]);
-                let posNow = pos2 != pos1 ? pos2 + ease("simple", x, -2) * (pos1-pos2) : pos2;
-                text(current[i], posNow, height/2);
-                pos1 += w1;
-                pos2 += w2;
-            }
-        }*/
 
-        let mrg = 50;
+
+        /*let mrg = 50;
         let x = (t % beat) / beat;
         for(let i=0; i<actions.length; i++){
             let a = actions[i];
@@ -169,8 +138,17 @@ function draw() {
                 fill(255, ease("simple", 1-x, -4) * 255);
                 text(a.tx, mrg + a.p1, height/2);
             }
-        }
+        }*/
 
+        let x = (t % beat) / beat;
+        for(let i=0; i<parts.length; i++){
+            let p = parts[i];
+            if(p.op == 'in') fill(255, ease("simple", x, -4) * 255);
+            else if(p.op == 'out') fill(255, ease("simple", 1-x, -4) * 255);
+            else fill(255, 255);
+
+            p.update();
+        }
 
         t++;
     }
@@ -209,6 +187,26 @@ function ease(type, x, p) {
 
 function pick(...opts) {
     return opts[floor(random(opts.length))];
+}
+
+class Part {
+    constructor(tx, anchor, op) {
+        this.tx = tx;
+        this.w = textWidth(tx);
+        this.a = anchor;
+        this.x = anchor ? anchor.x + anchor.w : 0;
+        this.y = anchor ? anchor.y : 0;
+        this.op = op;
+    }
+
+    update() {
+        if(this.a != null) {
+            this.x += ((this.a.x+this.a.w) - this.x) / 10;
+            this.y += (this.a.y - this.y) / 10;
+        }
+
+        text(this.tx, this.x, this.y);
+    }
 }
 
 function keyTyped() {

@@ -7,9 +7,13 @@ var t = 0;
 var go = true;
 var backCol = 0;
 var mood = 0;
-var beat = 45;
-var fontSz = 60;
+var beat = 40;
+var beatMin = 5, beatMax = 50;
+var fontSz = 96;
+var gap = 10;
 var base;
+var mood;
+
 
 
 // function preload() {
@@ -22,11 +26,14 @@ function setup() {
     frameRate(30);
 
     base = [50, height*0.8];
-    adj = { curr:["be", "gin"], tgt:["be", "gin"], word:'' };
-    noun = { curr:["be", "gin"], tgt:["be", "gin"], word:'' };
+    adj = { curr:["be", "gin"], tgt:["be", "gin"], word:'', old:'' };
+    noun = { curr:["be", "gin"], tgt:["be", "gin"], word:'', old:'' };
+    change(adj);
+    change(noun);
     //curr = getWord("adj");
     //console.log("ini", curr, tgt);
 
+    textFont('Courier New');
     textSize(fontSz);
     fill(255, 255);
     noStroke();
@@ -35,17 +42,21 @@ function setup() {
 function draw() {
     if(go) {
 
-        if(t % int(beat) == 0) {
+        mood = contrast( noise(t*0.03), 2 );
+
+        if(beat == 0) {
             column.push(adj.word +' '+ noun.word);
             //console.log(column);
-            change(adj);
-            change(noun);
-            //console.log(t, curr, tgt);
+            if(mood < 0.5) change(adj);
+            else change(noun);
+
+            beat = Math.floor( beatMin + (1 - Math.abs(mood-0.5)*2) * (beatMax-beatMin) );
+            console.log(mood, beat, adj.word, noun.word);
         }
 
         background(backCol);
 
-        let x = (t % beat) / beat;
+        /*let x = (t % beat) / beat;
         fill(255, ease("simple", x, -2) * 255);
         text(adj.word +' '+ noun.word, base[0], base[1]);
 
@@ -57,9 +68,18 @@ function draw() {
             n ++;
 
             if(i == 0 && pos < -fontSz) column.shift();
-        }
+        }*/
+
+        //let x = (t % beat) / beat;
+        // fill(255, ease("simple", 1-x, 2) * 255);
+        // text(adj.old, width/2 - (textWidth(adj.old)+gap), height/2);
+        // text(noun.old, width/2 +gap, height/2);
+        // fill(255, ease("simple", x, 2) * 255);
+        text(adj.word, width/2 - (textWidth(adj.word)+gap), height/2);
+        text(noun.word, width/2 +gap, height/2);
 
         t++;
+        beat --;
     }
 }
 
@@ -97,6 +117,7 @@ function change(word) {
         }
     }
 
+    word.old = word.word;
     word.word = word.curr.join('');
 
     console.log(word.word, op);
