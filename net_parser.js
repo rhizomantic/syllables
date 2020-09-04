@@ -2,7 +2,7 @@ var atoms = {}, starts = [];
 var words;
 
 function preload() {
-    words = loadStrings('data/syllables.txt');
+    words = loadStrings('data/all.txt');
 }
 
 function setup() {
@@ -10,9 +10,12 @@ function setup() {
     canvas.parent('container');
     background("#FFFFFF");
 
+    console.log("WORDS ", words.length);
+
     for(let w of words) {
-        let w2 = w.split('	');
-        let ps = w2[0].split('.')
+        //let w2 = w.split('	');
+        //let ps = w2[0].split('.')
+        let ps = w.split('.')
         for(let i=0; i<ps.length; i++) {
             if(ps[i].length < 1) continue;
             if(i == 0 && starts.indexOf(ps[i]) < 0) starts.push(ps[i]);

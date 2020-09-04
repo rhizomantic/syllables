@@ -4,23 +4,23 @@ var column = [];
 var t = 0;
 var go = true;
 var backCol = 0;
-var heat = 0.5;
-var mood = 0;
+//var heat = 0.5;
+//var mood = 0;
 var beat = 30;
-var fontSz = 60;
+var fontSz = 48;
 var base;
 
 
-// function preload() {
-//     words = loadStrings("syllables.txt");
-// }
+ function preload() {
+     words = loadStrings("data/adjectives.txt");
+ }
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
     canvas.parent('container');
     frameRate(30);
 
-    base = [50, height*0.8];
+    base = [100, 100+fontSz];
 
     textSize(fontSz);
     fill(255, 255);
@@ -29,30 +29,31 @@ function setup() {
 
 function draw() {
     if(go) {
-        heat = contrast( noise(1, t*0.001), 2 );
-
+        //heat = contrast( noise(1, t*0.001), 2 );
 
         if(t % int(beat) == 0) {
-            column.push(current.join(''));
-            //console.log(column);
+            let w = current.join('');
+            column.push(w);
 
             let op = "non";
             ix = -1
-            if( compare(current, target) || int(random(heat*40+15)) == 1 ) {
+            if( compare(current, target) || int(random(30)) == 1 ) {
                 let t1 = words[int(random(words.length))];
                 let t2 = t1.split('\t');
-                mood = parseInt(t2[1]);
                 target = t2[0].split('.');
                 if(target[target.length-1].length == 0) target.pop();
 
-
-                console.log("T--", target.join('.'));
+                //console.log("T--", target.join('.'));
             }
             if(! compare(current, target)){
                 old = [...current];
 
-                let cr, w1 = 0; w2 = 0;
-                if( int(random(20)) == 1 ) {
+                if( int(random(5)) == 1 && w.length < 36 ) {
+                    ix = int(random(target.length));
+                    current.splice(int(random(current.length)), 0, target[ix]);
+                    op = "rnd"+ix;
+
+                } else if( int(random(20)) == 1 && w.length < 36 ) {
                     ix = int(random(current.length));
                     current.splice(ix, 0, current[ix]);
                     op = "dup";
@@ -75,27 +76,28 @@ function draw() {
                 }
             }
 
-            console.log(current.join('.'), op);
-            //go = false;
-
+            //console.log(w, op, column.length);
         }
 
         background(backCol);
-
-
-
+        //rotate(-0.2);
         let x = (t % beat) / beat;
         fill(255, ease("simple", x, -2) * 255);
         text(current.join(''), base[0], base[1]);
 
         fill(255, 255);
+
         let n = 0, pos;
         for(let i = column.length-1; i>=0; i--) {
-            pos = base[1] - (fontSz*1.2 * n + fontSz*1.2 * ease("simple", x, -2));
+            //pos = base[1] - (fontSz*1.2 * n + fontSz*1.2 * ease("simple", x, 1));
+            //pos = base[1] + (fontSz*1.2 * (n + x));
+            //rotate(heat * -0.05);
+            pos = base[1] + (fontSz*1.2 * (n + ease("simple", x, -6)));
+            //fill(255, 255 * (1-pos/height));//i/column.length);
             text( column[i], base[0], pos );
             n ++;
 
-            if(i == 0 && pos < -fontSz) column.shift();
+            if(i == 0 && pos > height*1.1) column.shift();
         }
 
         t++;
@@ -118,8 +120,6 @@ function ease(type, x, p) {
     if(type == "simple") {
         return p < 0 ? 1 - Math.pow(1-x, Math.abs(p)) : Math.pow(x, Math.abs(p));
     } else if (type == "IO") {
-        //if(t < 0.5) return easeSimple(t*2, p) * 0.5;
-        //else return (1 - easeSimple(1-(t-0.5)*2, p)) * 0.5 + 0.5;
         if(x < 0.5) return (p < 0 ? 1 - Math.pow(1-x*2, Math.abs(p)) : Math.pow(x*2, Math.abs(p))) * 0.5;
         else return (1 - (p < 0 ? 1 - Math.pow(1-(1-(x-0.5)*2), Math.abs(p)) : Math.pow(1-(x-0.5)*2, Math.abs(p)))) * 0.5 + 0.5;
     } else if (type == "hill") {
@@ -138,11 +138,9 @@ function pick(...opts) {
 }
 
 function keyTyped() {
-    if (document.activeElement === document.getElementById('editor-area')) return;
-
     if (key === ' ') {
         go = !go;
-        console.log("go", go);
+        //console.log("go", go);
     }
     // uncomment to prevent any default behavior
     return false;

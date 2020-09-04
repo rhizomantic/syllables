@@ -1,6 +1,7 @@
 var curr = ["be", "gin"];
 var tgt = curr;
 var adj, noun;
+var adjectives, nouns;
 
 var column = [];
 var t = 0;
@@ -9,16 +10,18 @@ var backCol = 0;
 var mood = 0;
 var beat = 40;
 var beatMin = 5, beatMax = 50;
-var fontSz = 96;
-var gap = 10;
+var fontSz = 80;
+var gap = 20;
 var base;
 var mood;
+var x, xvar;
 
 
 
-// function preload() {
-//     words = loadStrings("syllables.txt");
-// }
+function preload() {
+    nouns = loadStrings("data/nouns.txt");
+    adjectives = loadStrings("data/adjectives.txt");
+}
 
 function setup() {
     canvas = createCanvas(windowWidth, windowHeight);
@@ -33,7 +36,7 @@ function setup() {
     //curr = getWord("adj");
     //console.log("ini", curr, tgt);
 
-    textFont('Courier New');
+    textFont('Arial');//Courier New');
     textSize(fontSz);
     fill(255, 255);
     noStroke();
@@ -45,13 +48,20 @@ function draw() {
         mood = contrast( noise(t*0.03), 2 );
 
         if(beat == 0) {
-            column.push(adj.word +' '+ noun.word);
+            //column.push(adj.word +' '+ noun.word);
             //console.log(column);
-            if(mood < 0.5) change(adj);
-            else change(noun);
+            if(mood < 0.5) {
+                change(adj);
+                noun.old = noun.word;
+            } else {
+                change(noun);
+                adj.old = adj.word;
+            }
+
 
             beat = Math.floor( beatMin + (1 - Math.abs(mood-0.5)*2) * (beatMax-beatMin) );
-            console.log(mood, beat, adj.word, noun.word);
+            x = 0, xvar = 1 / beat;
+            console.log(mood, beat, adj.old, adj.word);
         }
 
         background(backCol);
@@ -71,11 +81,25 @@ function draw() {
         }*/
 
         //let x = (t % beat) / beat;
+        // x += xvar;
+        // if(adj.old != adj.word) {
+        //     fill(255, ease("simple", 1-x, 1) * 255);
+        //     text(adj.old, width/2 - (textWidth(adj.old)+gap), height/2);
+        //     fill(255, ease("simple", x, 1) * 255);
+        //     text(adj.word, width/2 - (textWidth(adj.word)+gap), height/2);
+        //     //console.log(t, x, adj.old, adj.word);
+        // } else {
+        //     fill(255, 255);
+        //     text(adj.word, width/2 - (textWidth(adj.word)+gap), height/2);
+        // }
+
+
         // fill(255, ease("simple", 1-x, 2) * 255);
         // text(adj.old, width/2 - (textWidth(adj.old)+gap), height/2);
         // text(noun.old, width/2 +gap, height/2);
         // fill(255, ease("simple", x, 2) * 255);
         text(adj.word, width/2 - (textWidth(adj.word)+gap), height/2);
+        //fill(255, 255);
         text(noun.word, width/2 +gap, height/2);
 
         t++;
@@ -125,7 +149,8 @@ function change(word) {
 
 function getWord(word) {
     let t1 = word == noun ? nouns[int(random(nouns.length))] : adjectives[int(random(adjectives.length))];
-    out = t1.split('.');
+    let t2 = t1.split('\t');
+    out = t2[0].split('.');
     if(out[out.length-1].length == 0) out.pop();
 
     console.log("T--", out.join('.'));
